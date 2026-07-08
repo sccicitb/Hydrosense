@@ -1,0 +1,21 @@
+{
+"type": "FeatureCollection",
+"name": "point",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 1, "Name": "Situ Pump" }, "geometry": { "type": "Point", "coordinates": [ 107.767260137304561, -6.928966786277555 ] } },
+{ "type": "Feature", "properties": { "id": 2, "Name": "Pre Treatment" }, "geometry": { "type": "Point", "coordinates": [ 107.767123221696536, -6.927269196854814 ] } },
+{ "type": "Feature", "properties": { "id": 3, "Name": "WTP" }, "geometry": { "type": "Point", "coordinates": [ 107.76695139260849, -6.927010276553838 ] } },
+{ "type": "Feature", "properties": { "id": 4, "Name": "Water Tank" }, "geometry": { "type": "Point", "coordinates": [ 107.766866504931514, -6.926640584329155 ] } },
+{ "type": "Feature", "properties": { "id": 5, "Name": "Pump" }, "geometry": { "type": "Point", "coordinates": [ 107.766837752653828, -6.926535249175324 ] } },
+{ "type": "Feature", "properties": { "id": 5, "Name": "gwt" }, "geometry": { "type": "Point", "coordinates": [ 107.768881218103431, -6.923960986620077 ] } },
+{ "type": "Feature", "properties": { "id": 6, "Name": "tank 1" }, "geometry": { "type": "Point", "coordinates": [ 107.767950191968922, -6.926690193780551 ] } },
+{ "type": "Feature", "properties": { "id": 7, "Name": "tank 2" }, "geometry": { "type": "Point", "coordinates": [ 107.768169256941746, -6.926505347578982 ] } },
+{ "type": "Feature", "properties": { "id": 8, "Name": "tank 3" }, "geometry": { "type": "Point", "coordinates": [ 107.768380106978071, -6.926320501304966 ] } },
+{ "type": "Feature", "properties": { "id": 9, "Name": "tank4" }, "geometry": { "type": "Point", "coordinates": [ 107.768593695326572, -6.926135654958506 ] } },
+{ "type": "Feature", "properties": { "id": 10, "Name": "asrama 1" }, "geometry": { "type": "Point", "coordinates": [ 107.768158303693099, -6.926945716351662 ] } },
+{ "type": "Feature", "properties": { "id": 11, "Name": "asrama 2" }, "geometry": { "type": "Point", "coordinates": [ 107.768393798538881, -6.926777180203282 ] } },
+{ "type": "Feature", "properties": { "id": 12, "Name": "asrama 3" }, "geometry": { "type": "Point", "coordinates": [ 107.768601910263058, -6.926586897382723 ] } },
+{ "type": "Feature", "properties": { "id": 13, "Name": "asrama 4" }, "geometry": { "type": "Point", "coordinates": [ 107.768823713548088, -6.92641836110612 ] } }
+]
+}
