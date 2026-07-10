@@ -46,23 +46,23 @@ const WaterUsageChart = ({ width }) => {
   
     switch (selectedRange) {
       case "hourly":
-        url = "https://waterwise-server.urbansolv.co.id/data/leakage/statistics?filter=hourly&panelId=panelB_flow1";
+        url = "https://api.hydrosense.awankesehatan.com/data/leakage/statistics?filter=hourly&panelId=panelB_flow1";
         expectedLength = 60;
         break;
       case "daily":
-        url = "https://waterwise-server.urbansolv.co.id/data/leakage/statistics?filter=daily&panelId=panelB_flow1";
+        url = "https://api.hydrosense.awankesehatan.com/data/leakage/statistics?filter=daily&panelId=panelB_flow1";
         expectedLength = 24;
         break;
       case "weekly":
-        url = "https://waterwise-server.urbansolv.co.id/data/leakage/statistics?filter=weekly&panelId=panelB_flow1";
+        url = "https://api.hydrosense.awankesehatan.com/data/leakage/statistics?filter=weekly&panelId=panelB_flow1";
         expectedLength = 7;
         break;
       case "monthly":
-        url = "https://waterwise-server.urbansolv.co.id/data/leakage/statistics?filter=monthly&panelId=panelB_flow1";
+        url = "https://api.hydrosense.awankesehatan.com/data/leakage/statistics?filter=monthly&panelId=panelB_flow1";
         expectedLength = 31;
         break;
       case "yearly":
-        url = "https://waterwise-server.urbansolv.co.id/data/leakage/statistics?filter=yearly&panelId=panelB_flow1";
+        url = "https://api.hydrosense.awankesehatan.com/data/leakage/statistics?filter=yearly&panelId=panelB_flow1";
         expectedLength = 12;
         break;
       default:

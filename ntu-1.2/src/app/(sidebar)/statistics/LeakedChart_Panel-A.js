@@ -46,23 +46,23 @@ const WaterUsageChart = ({ width }) => {
   
     switch (selectedRange) {
       case "hourly":
-        url = "https://waterwise-server.urbansolv.co.id/data/leakage/statistics?filter=hourly&panelId=panelA";
+        url = "https://api.hydrosense.awankesehatan.com/data/leakage/statistics?filter=hourly&panelId=panelA";
         expectedLength = 60;
         break;
       case "daily":
-        url = "https://waterwise-server.urbansolv.co.id/data/leakage/statistics?filter=daily&panelId=panelA";
+        url = "https://api.hydrosense.awankesehatan.com/data/leakage/statistics?filter=daily&panelId=panelA";
         expectedLength = 24;
         break;
       case "weekly":
-        url = "https://waterwise-server.urbansolv.co.id/data/leakage/statistics?filter=weekly&panelId=panelA";
+        url = "https://api.hydrosense.awankesehatan.com/data/leakage/statistics?filter=weekly&panelId=panelA";
         expectedLength = 7;
         break;
       case "monthly":
-        url = "https://waterwise-server.urbansolv.co.id/data/leakage/statistics?filter=monthly&panelId=panelA";
+        url = "https://api.hydrosense.awankesehatan.com/data/leakage/statistics?filter=monthly&panelId=panelA";
         expectedLength = 31;
         break;
       case "yearly":
-        url = "https://waterwise-server.urbansolv.co.id/data/leakage/statistics?filter=yearly&panelId=panelA";
+        url = "https://api.hydrosense.awankesehatan.com/data/leakage/statistics?filter=yearly&panelId=panelA";
         expectedLength = 12;
         break;
       default:

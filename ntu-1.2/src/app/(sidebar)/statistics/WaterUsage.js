@@ -7,7 +7,7 @@ const WaterUsage = ({ width }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("https://waterwise-server.urbansolv.co.id/data/panelE1/latest");
+        const response = await fetch("https://api.hydrosense.awankesehatan.com/data/panelE1/latest");
         const data = await response.json();
         const level1 = data.level1;
         const calculatedVolume = ((6 * 5 * level1) / 100) * 1000;

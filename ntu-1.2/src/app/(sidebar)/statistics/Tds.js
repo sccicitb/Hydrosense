@@ -31,15 +31,15 @@ const TurbidityChart = ({ width }) => {
     const fetchData = async () => {
       try {
         // Mengambil data dari panel A (Situ 1)
-        const responseA = await fetch("https://waterwise-server.urbansolv.co.id/data/panelA1/latest");
+        const responseA = await fetch("https://api.hydrosense.awankesehatan.com/data/panelA1/latest");
         const dataA = await responseA.json();
         
         // Mengambil data dari panel B (Setelah Unit Pre-treatment, Rumah Pompa WTP)
-        const responseB = await fetch("https://waterwise-server.urbansolv.co.id/data/panelB1/latest");
+        const responseB = await fetch("https://api.hydrosense.awankesehatan.com/data/panelB1/latest");
         const dataB = await responseB.json();
 
         // Mengambil data dari panel E (GWK Induk, Asrama TB4)
-        const responseE = await fetch("https://waterwise-server.urbansolv.co.id/data/panelE1/latest");
+        const responseE = await fetch("https://api.hydrosense.awankesehatan.com/data/panelE1/latest");
         const dataE = await responseE.json();
 
         // Fungsi untuk membatasi angka hingga 2 digit di belakang koma

@@ -57,9 +57,9 @@ const WaterUsageChart = ({ width }) => {
     }
   
     const urls = {
-      panelC: `https://waterwise-server.urbansolv.co.id/data/supply/panelC?filter=${filterParam}`,
-      panelD: `https://waterwise-server.urbansolv.co.id/data/supply/panelD?filter=${filterParam}`,
-      panelE: `https://waterwise-server.urbansolv.co.id/data/supply/panelE?filter=${filterParam}`,
+      panelC: `https://api.hydrosense.awankesehatan.com/data/supply/panelC?filter=${filterParam}`,
+      panelD: `https://api.hydrosense.awankesehatan.com/data/supply/panelD?filter=${filterParam}`,
+      panelE: `https://api.hydrosense.awankesehatan.com/data/supply/panelE?filter=${filterParam}`,
     };
   
     const dayMap = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
