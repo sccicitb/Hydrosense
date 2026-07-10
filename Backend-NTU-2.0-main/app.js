@@ -84,4 +84,11 @@ io.on('connection', (socket) => {
   });
 });
 
+if (require.main === module) {
+  const port = process.env.PORT || 3000;
+  httpServer.listen(port, () => {
+    console.log(`Server listening on PORT ${port}`);
+  });
+}
+
 module.exports = httpServer;
