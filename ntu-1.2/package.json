@@ -24,7 +24,7 @@
     "lucide-react": "^0.462.0",
     "maplibre-gl": "^4.7.1",
     "moment": "^2.30.1",
-    "next": "15.0.3",
+    "next": "15.5.18",
     "primeicons": "^7.0.0",
     "primereact": "^10.9.5",
     "react": "^18.3.1",
