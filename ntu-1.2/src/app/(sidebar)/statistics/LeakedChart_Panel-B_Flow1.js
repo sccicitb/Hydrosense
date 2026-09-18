@@ -15,6 +15,8 @@ import {
 import { Line } from "react-chartjs-2";
 import axios from "axios";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.hydrosense.awankesehatan.com";
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -46,23 +48,23 @@ const WaterUsageChart = ({ width }) => {
   
     switch (selectedRange) {
       case "hourly":
-        url = "https://api.hydrosense.awankesehatan.com/data/leakage/statistics?filter=hourly&panelId=panelB_flow1";
+        url = `${API_BASE_URL}/data/leakage/statistics?filter=hourly&panelId=panelB_flow1`;
         expectedLength = 60;
         break;
       case "daily":
-        url = "https://api.hydrosense.awankesehatan.com/data/leakage/statistics?filter=daily&panelId=panelB_flow1";
+        url = `${API_BASE_URL}/data/leakage/statistics?filter=daily&panelId=panelB_flow1`;
         expectedLength = 24;
         break;
       case "weekly":
-        url = "https://api.hydrosense.awankesehatan.com/data/leakage/statistics?filter=weekly&panelId=panelB_flow1";
+        url = `${API_BASE_URL}/data/leakage/statistics?filter=weekly&panelId=panelB_flow1`;
         expectedLength = 7;
         break;
       case "monthly":
-        url = "https://api.hydrosense.awankesehatan.com/data/leakage/statistics?filter=monthly&panelId=panelB_flow1";
+        url = `${API_BASE_URL}/data/leakage/statistics?filter=monthly&panelId=panelB_flow1`;
         expectedLength = 31;
         break;
       case "yearly":
-        url = "https://api.hydrosense.awankesehatan.com/data/leakage/statistics?filter=yearly&panelId=panelB_flow1";
+        url = `${API_BASE_URL}/data/leakage/statistics?filter=yearly&panelId=panelB_flow1`;
         expectedLength = 12;
         break;
       default:

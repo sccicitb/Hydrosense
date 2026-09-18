@@ -15,6 +15,8 @@ import {
 import { Line } from "react-chartjs-2";
 import axios from "axios";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.hydrosense.awankesehatan.com";
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -35,23 +37,23 @@ const WaterUsageChart = ({ width }) => {
   
     switch (selectedRange) {
       case "hourly":
-        url = "https://api.hydrosense.awankesehatan.com/data/supply/panelC?filter=hourly";
+        url = `${API_BASE_URL}/data/supply/panelC?filter=hourly`;
         expectedLength = 60; // 60 menit per jam
         break;
       case "daily":
-        url = "https://api.hydrosense.awankesehatan.com/data/supply/panelC?filter=daily";
+        url = `${API_BASE_URL}/data/supply/panelC?filter=daily`;
         expectedLength = 24; // 24 jam per hari
         break;
       case "weekly":
-        url = "https://api.hydrosense.awankesehatan.com/data/supply/panelC?filter=weekly";
+        url = `${API_BASE_URL}/data/supply/panelC?filter=weekly`;
         expectedLength = 7; // 7 hari dalam seminggu
         break;
       case "monthly":
-        url = "https://api.hydrosense.awankesehatan.com/data/supply/panelC?filter=monthly";
+        url = `${API_BASE_URL}/data/supply/panelC?filter=monthly`;
         expectedLength = 31; // 30/31 hari dalam sebulan
         break;
       case "yearly":
-        url = "https://api.hydrosense.awankesehatan.com/data/supply/panelC?filter=yearly";
+        url = `${API_BASE_URL}/data/supply/panelC?filter=yearly`;
         expectedLength = 12; // 12 bulan dalam setahun
         break;
       default:

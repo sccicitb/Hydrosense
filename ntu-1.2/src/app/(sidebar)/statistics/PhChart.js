@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip } from "chart.js";
 import { Bar } from "react-chartjs-2";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.hydrosense.awankesehatan.com";
+
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
 
 const TurbidityChart = ({ width }) => {
@@ -31,15 +33,15 @@ const TurbidityChart = ({ width }) => {
     const fetchData = async () => {
       try {
         // Mengambil data dari panel A (Situ 1)
-        const responseA = await fetch("https://api.hydrosense.awankesehatan.com/data/panelA1/latest");
+        const responseA = await fetch(`${API_BASE_URL}/data/panelA1/latest`);
         const dataA = await responseA.json();
         
         // Mengambil data dari panel B (Setelah Unit Pre-treatment, Rumah Pompa WTP)
-        const responseB = await fetch("https://api.hydrosense.awankesehatan.com/data/panelB1/latest");
+        const responseB = await fetch(`${API_BASE_URL}/data/panelB1/latest`);
         const dataB = await responseB.json();
 
         // Mengambil data dari panel E (GWK Induk, Asrama TB4)
-        const responseE = await fetch("https://api.hydrosense.awankesehatan.com/data/panelE1/latest");
+        const responseE = await fetch(`${API_BASE_URL}/data/panelE1/latest`);
         const dataE = await responseE.json();
 
         // Fungsi untuk membatasi angka hingga 2 digit di belakang koma

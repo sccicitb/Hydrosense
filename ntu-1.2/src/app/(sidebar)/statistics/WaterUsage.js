@@ -1,13 +1,15 @@
 "use client";
 import React, { useEffect, useState } from "react";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.hydrosense.awankesehatan.com";
+
 const WaterUsage = ({ width }) => {
   const [volume, setVolume] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("https://api.hydrosense.awankesehatan.com/data/panelE1/latest");
+        const response = await fetch(`${API_BASE_URL}/data/panelE1/latest`);
         const data = await response.json();
         const level1 = data.level1;
         const calculatedVolume = ((6 * 5 * level1) / 100) * 1000;

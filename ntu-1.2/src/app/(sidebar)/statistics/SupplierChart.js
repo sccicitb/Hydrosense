@@ -15,6 +15,8 @@ import {
 import { Line } from "react-chartjs-2";
 import axios from "axios";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.hydrosense.awankesehatan.com";
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -57,9 +59,9 @@ const WaterUsageChart = ({ width }) => {
     }
   
     const urls = {
-      panelC: `https://api.hydrosense.awankesehatan.com/data/supply/panelC?filter=${filterParam}`,
-      panelD: `https://api.hydrosense.awankesehatan.com/data/supply/panelD?filter=${filterParam}`,
-      panelE: `https://api.hydrosense.awankesehatan.com/data/supply/panelE?filter=${filterParam}`,
+      panelC: `${API_BASE_URL}/data/supply/panelC?filter=${filterParam}`,
+      panelD: `${API_BASE_URL}/data/supply/panelD?filter=${filterParam}`,
+      panelE: `${API_BASE_URL}/data/supply/panelE?filter=${filterParam}`,
     };
   
     const dayMap = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
