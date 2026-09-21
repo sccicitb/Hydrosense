@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3006";
-const REMOTE_API_BASE_URL = "https://api.hydrosense.awankesehatan.com";
+const REMOTE_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.hydrosense.awankesehatan.com";
 
 const sensorPanels = {
   panelA: { path: "panelA1", label: "Panel A" },
