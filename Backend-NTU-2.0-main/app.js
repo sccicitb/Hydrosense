@@ -11,6 +11,7 @@ const { PanelA, PanelB, PanelC, PanelD, PanelE } = require('./models');
 const user = require('./models/user');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+const sensorHealth = require('./helper/sensorHealth');
 
 // Create HTTP server
 const httpServer = createServer(app);
@@ -50,29 +51,72 @@ client.on('connect', () => {
   client.subscribe('water_monitor/data/panelE');
 });
 
+const PANEL_BY_TOPIC = {
+  'water_monitor/data/panelA': 'A',
+  'water_monitor/data/panelB': 'B',
+  'water_monitor/data/panelC': 'C',
+  'water_monitor/data/panelD': 'D',
+  'water_monitor/data/panelE': 'E',
+};
+
 client.on('message', async (topic, message) => {
   const data = JSON.parse(message.toString());
   // Emit to Socket.IO clients
   io.emit(topic, data);
+
+  const panelKey = PANEL_BY_TOPIC[topic];
+  if (panelKey) sensorHealth.recordMessage(panelKey);
+
   switch (topic) {
     case 'water_monitor/data/panelA':
-      await PanelA.create(data);
+      try {
+        await PanelA.create(data);
+        sensorHealth.recordPersisted('A');
+      } catch (err) {
+        sensorHealth.recordError('A', err.message);
+      }
       break;
     case 'water_monitor/data/panelB':
-      await PanelB.create(data);
+      try {
+        await PanelB.create(data);
+        sensorHealth.recordPersisted('B');
+      } catch (err) {
+        sensorHealth.recordError('B', err.message);
+      }
       break;
     case 'water_monitor/data/panelC':
-      await PanelC.create(data);
+      try {
+        await PanelC.create(data);
+        sensorHealth.recordPersisted('C');
+      } catch (err) {
+        sensorHealth.recordError('C', err.message);
+      }
       break;
     case 'water_monitor/data/panelD':
-      await PanelD.create(data);
+      try {
+        await PanelD.create(data);
+        sensorHealth.recordPersisted('D');
+      } catch (err) {
+        sensorHealth.recordError('D', err.message);
+      }
       break;
     case 'water_monitor/data/panelE':
-      await PanelE.create(data);
+      try {
+        await PanelE.create(data);
+        sensorHealth.recordPersisted('E');
+      } catch (err) {
+        sensorHealth.recordError('E', err.message);
+      }
       break;
     default:
       console.log(`No handler for topic ${topic}`);
   }
+
+  if (panelKey) io.emit('sensor-health', sensorHealth.getSnapshot());
+});
+
+sensorHealth.startFreshnessTick((snapshot) => {
+  io.emit('sensor-health', snapshot);
 });
 
 // Socket.IO connection handler
