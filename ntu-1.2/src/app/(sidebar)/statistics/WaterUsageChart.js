@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Dropdown } from "primereact/dropdown";
+import { SensorStatusIcon } from "@/components/SensorStatusIcon";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -243,18 +244,21 @@ const WaterUsageChart = ({ width }) => {
             </div>
           </div>
 
-          <Dropdown
-            value={selectedRange}
-            options={dropdownOptions}
-            onChange={(e) => setSelectedRange(e.value)}
-            className="flex items-center text-center gap-2 bg-sky-50 border border-sky-100 px-4 py-2 rounded-lg text-slate-500 text-sm"
-            panelStyle={{
-              backgroundColor: "#ffffff",
-              color: "#0f172a",
-              textAlign: "center",
-            }}
-            style={{ color: "#0f172a" }}
-          />
+          <div className="flex items-center gap-3">
+            <SensorStatusIcon panel="C" />
+            <Dropdown
+              value={selectedRange}
+              options={dropdownOptions}
+              onChange={(e) => setSelectedRange(e.value)}
+              className="flex items-center text-center gap-2 bg-sky-50 border border-sky-100 px-4 py-2 rounded-lg text-slate-500 text-sm"
+              panelStyle={{
+                backgroundColor: "#ffffff",
+                color: "#0f172a",
+                textAlign: "center",
+              }}
+              style={{ color: "#0f172a" }}
+            />
+          </div>
         </div>
 
         <div className="h-[290px]">

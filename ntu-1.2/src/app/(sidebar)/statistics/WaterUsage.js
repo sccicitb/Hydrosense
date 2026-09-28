@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { SensorStatusIcon } from "@/components/SensorStatusIcon";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3006";
 
@@ -30,14 +31,17 @@ const WaterUsage = ({ width }) => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-slate-900 text-xl font-medium">Water Usage in Asrama</h2>
-        <div className="flex items-center bg-sky-50 border border-sky-100 rounded-lg px-4 py-2 cursor-pointer">
-          <div className="w-2 h-2 rounded-full bg-pink-500 mr-2"></div>
-          <select className="bg-sky-50 text-slate-900 border-none outline-none pr-6 appearance-none cursor-pointer">
-            <option>Asrama 1</option>
-            <option>Asrama 2</option>
-            <option>Asrama 3</option>
-            <option>Asrama 4</option>
-          </select>
+        <div className="flex items-center gap-3">
+          <SensorStatusIcon panel="E" />
+          <div className="flex items-center bg-sky-50 border border-sky-100 rounded-lg px-4 py-2 cursor-pointer">
+            <div className="w-2 h-2 rounded-full bg-pink-500 mr-2"></div>
+            <select className="bg-sky-50 text-slate-900 border-none outline-none pr-6 appearance-none cursor-pointer">
+              <option>Asrama 1</option>
+              <option>Asrama 2</option>
+              <option>Asrama 3</option>
+              <option>Asrama 4</option>
+            </select>
+          </div>
         </div>
       </div>
 
