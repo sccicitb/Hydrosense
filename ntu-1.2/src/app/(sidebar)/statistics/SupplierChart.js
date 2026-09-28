@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Dropdown } from "primereact/dropdown";
+import { SensorStatusIcon } from "@/components/SensorStatusIcon";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -328,6 +329,12 @@ const WaterUsageChart = ({ width }) => {
             <div className="w-2 h-2 rounded-full bg-[#A1EF7A] ml-6 mt-2"></div>
             <span className="text-slate-900 text-[12px] ml-2">Request</span>
           </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <SensorStatusIcon panel="C" />
+            <SensorStatusIcon panel="D" />
+            <SensorStatusIcon panel="E" />
           </div>
 
           <Dropdown
