@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip } from "chart.js";
 import { Bar } from "react-chartjs-2";
+import { SensorStatusIcon } from "@/components/SensorStatusIcon";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3006";
 
@@ -157,6 +158,11 @@ const TurbidityChart = ({ width }) => {
 
   return (
     <div className="bg-white shadow-sm shadow-sky-100/70 rounded-xl p-6 h-[615px] border-sky-100 border" style={{ width: width, height: "505px" }}>
+      <div className="flex justify-end gap-2 mb-2">
+        <SensorStatusIcon panel="A" />
+        <SensorStatusIcon panel="B" />
+        <SensorStatusIcon panel="E" />
+      </div>
       <div className="h-full">
         <Bar data={data} options={options} />
       </div>
