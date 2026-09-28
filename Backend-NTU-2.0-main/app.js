@@ -60,7 +60,13 @@ const PANEL_BY_TOPIC = {
 };
 
 client.on('message', async (topic, message) => {
-  const data = JSON.parse(message.toString());
+  let data;
+  try {
+    data = JSON.parse(message.toString());
+  } catch (err) {
+    console.error(`Failed to parse MQTT message on ${topic}:`, err.message);
+    return;
+  }
   // Emit to Socket.IO clients
   io.emit(topic, data);
 
@@ -73,7 +79,7 @@ client.on('message', async (topic, message) => {
         await PanelA.create(data);
         sensorHealth.recordPersisted('A');
       } catch (err) {
-        sensorHealth.recordError('A', err.message);
+        sensorHealth.recordError('A', err.name);
       }
       break;
     case 'water_monitor/data/panelB':
@@ -81,7 +87,7 @@ client.on('message', async (topic, message) => {
         await PanelB.create(data);
         sensorHealth.recordPersisted('B');
       } catch (err) {
-        sensorHealth.recordError('B', err.message);
+        sensorHealth.recordError('B', err.name);
       }
       break;
     case 'water_monitor/data/panelC':
@@ -89,7 +95,7 @@ client.on('message', async (topic, message) => {
         await PanelC.create(data);
         sensorHealth.recordPersisted('C');
       } catch (err) {
-        sensorHealth.recordError('C', err.message);
+        sensorHealth.recordError('C', err.name);
       }
       break;
     case 'water_monitor/data/panelD':
@@ -97,7 +103,7 @@ client.on('message', async (topic, message) => {
         await PanelD.create(data);
         sensorHealth.recordPersisted('D');
       } catch (err) {
-        sensorHealth.recordError('D', err.message);
+        sensorHealth.recordError('D', err.name);
       }
       break;
     case 'water_monitor/data/panelE':
@@ -105,7 +111,7 @@ client.on('message', async (topic, message) => {
         await PanelE.create(data);
         sensorHealth.recordPersisted('E');
       } catch (err) {
-        sensorHealth.recordError('E', err.message);
+        sensorHealth.recordError('E', err.name);
       }
       break;
     default:

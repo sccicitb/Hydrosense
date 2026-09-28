@@ -7,6 +7,7 @@ import { io } from "socket.io-client";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3006";
 const PANELS = ["A", "B", "C", "D", "E"];
 const REFRESH_COOLDOWN_MS = 2500;
+const CONNECT_TIMEOUT_MS = 15000;
 
 const SensorHealthContext = createContext();
 
@@ -14,6 +15,7 @@ export const SensorHealthProvider = ({ children }) => {
   const [health, setHealth] = useState(null);
   const [connected, setConnected] = useState(false);
   const [everConnected, setEverConnected] = useState(false);
+  const [connectTimedOut, setConnectTimedOut] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const socketRef = useRef(null);
 
@@ -42,23 +44,28 @@ export const SensorHealthProvider = ({ children }) => {
     const socket = io(API_BASE_URL, { transports: ["websocket", "polling"] });
     socketRef.current = socket;
 
+    const connectTimeoutId = setTimeout(() => setConnectTimedOut(true), CONNECT_TIMEOUT_MS);
+
     socket.on("connect", () => {
+      clearTimeout(connectTimeoutId);
       setConnected(true);
       setEverConnected(true);
+      setConnectTimedOut(false);
       fetchSnapshot();
     });
     socket.on("disconnect", () => setConnected(false));
     socket.on("sensor-health", (snapshot) => setHealth(snapshot));
 
     return () => {
+      clearTimeout(connectTimeoutId);
       socket.disconnect();
     };
   }, []);
 
   const getPanelState = (panel) => {
-    if (everConnected && !connected) return "unknown";
+    if (!connected && (everConnected || connectTimedOut)) return "unknown";
     const entry = health && health[panel];
-    if (!entry) return "unknown";
+    if (!entry || !entry.lastMessageAt) return "unknown";
     if (entry.transmitting && entry.persisted) return "live";
     if (entry.transmitting && !entry.persisted) return "degraded";
     return "silent";
