@@ -15,7 +15,7 @@ import {
 import { Line } from "react-chartjs-2";
 import axios from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.hydrosense.awankesehatan.com";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3006";
 
 ChartJS.register(
   CategoryScale,
