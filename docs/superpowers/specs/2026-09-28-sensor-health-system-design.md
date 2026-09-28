@@ -145,20 +145,30 @@ this whole effort is meant to eliminate).
 ### Placement
 
 - **Dashboard**: a compact status strip — 5 icons (one per panel) plus one
-  "Refresh" button calling `refresh()` — replaces the entire
-  `checkAndToast`/`lastToastTime`/`toastTimers` block in
-  `dashboard/page.js`, including its `react-toastify` usage.
+  "Refresh" button calling `refresh()` — replaces the sensor-liveness
+  portion of `dashboard/page.js`'s data-fetch effect.
 - **Each statistics page**: one `<SensorStatusIcon panel="X" />` (the single
   panel that page displays) next to its chart header, reading from the same
   shared context — no per-page socket connections, no duplicate refresh
   logic.
 
-### Cleanup
+### Cleanup (corrected during implementation planning)
 
-`react-toastify` is referenced only in `dashboard/page.js` (confirmed via
-repo-wide grep) — its import and all toast calls are removed entirely as
-part of this work. The `react-toastify` package is dropped from
-`package.json` since nothing else in the app uses it.
+`dashboard/page.js` uses `react-toastify` for two unrelated things: (1) the
+sensor-liveness toast this spec replaces, and (2) a separate water-quality
+alert system (`lastToastTime` ref, `FIVE_MINUTES` constant, the `useEffect`
+around what was originally lines 698-760) that warns when TDS/pH/turbidity
+cross unsafe thresholds. That second system is untouched by this spec —
+`react-toastify`, `ToastContainer`, `lastToastTime`, and `FIVE_MINUTES` all
+stay.
+
+The sensor-liveness effect (originally lines 483-587) also does double duty
+today: besides the toast logic, it's where the dashboard fetches each
+panel's latest reading into state (`flow1`, `ph1`, `tds1`, `level1`, etc.)
+for the summary cards. Only the toast-triggering parts (`showSensorToast`,
+the `isToday` check, `toastTimers`, `toast.dismiss`/`toast.error` calls) are
+removed; the per-panel `fetch` + state-setting logic and the 10-minute
+polling interval are kept as-is, just no longer wrapped in toast calls.
 
 ## Data Flow & Edge Cases
 
