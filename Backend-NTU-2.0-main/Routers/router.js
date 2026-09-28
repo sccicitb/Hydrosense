@@ -13,5 +13,6 @@ router.post("/register", authentication, adminAuth, UserController.register);
 router.post("/login", UserController.login);
 
 router.use("/data", require("./data"));
+router.use("/health", require("./health"));
 
 module.exports = router;
