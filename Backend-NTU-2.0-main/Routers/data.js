@@ -8,8 +8,6 @@ router.get('/panelC', DataController.getPanelC);
 router.get('/panelD', DataController.getPanelD);
 router.get('/panelE', DataController.getPanelE);
 
-router.get('/leakages', DataController.getLeakages);
-
 router.get('/panelA1/latest', DataController.getLatestPanelA);
 router.get('/panelB1/latest', DataController.getLatestPanelB);
 router.get('/panelC1/latest', DataController.getLatestPanelC);

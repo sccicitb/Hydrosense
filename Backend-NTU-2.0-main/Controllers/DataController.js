@@ -6,7 +6,6 @@ const {
   PanelC,
   PanelD,
   PanelE,
-  Leakage,
 } = require('../models');
 const { Op } = require('sequelize');
 const moment = require('moment');
@@ -86,79 +85,11 @@ class DataController {
   static async getLatestPanelData(req, res, panelModel) {
     try {
       const data = await panelModel.findOne({
-        order: [['timestamp', 'DESC']],
+        order: [['createdAt', 'DESC']],
       });
       res.status(200).json(data);
     } catch (err) {
       res.status(500).json({ error: err.message });
-    }
-  }
-
-  static async getLeakages(req, res) {
-    const { filter, start, end, download } = req.query;
-    let where = {};
-
-    try {
-      if (start && end) {
-        const startDate = new Date(start);
-        const endDate = new Date(end);
-
-        if (isNaN(startDate) || isNaN(endDate)) {
-          return res.status(400).json({
-            error: 'Format tanggal start atau end tidak valid',
-          });
-        }
-
-        if (startDate > endDate) {
-          return res.status(400).json({
-            error: 'Tanggal start tidak boleh lebih besar dari end',
-          });
-        }
-
-        where.createdAt = {
-          [Op.gte]: startDate,
-          [Op.lte]: endDate,
-        };
-      } else if (filter === 'daily') {
-        where.createdAt = {
-          [Op.gte]: moment().startOf('day').toDate(),
-          [Op.lte]: moment().endOf('day').toDate(),
-        };
-      } else if (filter === 'weekly') {
-        where.createdAt = {
-          [Op.gte]: moment().startOf('isoWeek').toDate(),
-          [Op.lte]: moment().endOf('isoWeek').toDate(),
-        };
-      } else if (filter === 'monthly') {
-        where.createdAt = {
-          [Op.gte]: moment().startOf('month').toDate(),
-          [Op.lte]: moment().endOf('month').toDate(),
-        };
-      }
-
-      const data = await Leakage.findAll({ where });
-
-      if (download === 'csv') {
-        if (!data.length) {
-          return res.status(404).json({
-            error: 'Data leakages tidak ditemukan',
-          });
-        }
-
-        const parser = new Parser();
-        const csv = parser.parse(data.map((item) => item.toJSON()));
-
-        res.header('Content-Type', 'text/csv');
-        res.header('Content-Disposition', 'attachment; filename=leakages.csv');
-
-        return res.send(csv);
-      }
-
-      res.status(200).json(data);
-    } catch (err) {
-      res.status(500).json({
-        error: err.message,
-      });
     }
   }
 
@@ -179,7 +110,7 @@ class DataController {
   }
 
   static async getPanelE(req, res) {
-    return DataController.getPanelData(req, res, PanelD);
+    return DataController.getPanelData(req, res, PanelE);
   }
 
   static async getLatestPanelA(req, res) {
