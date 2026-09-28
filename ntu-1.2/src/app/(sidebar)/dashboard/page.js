@@ -16,9 +16,10 @@ import {
   Waves,
   Wrench,
 } from "lucide-react";
+import { useSensorHealth } from "@/context/SensorHealthContext";
+import { SensorStatusIcon } from "@/components/SensorStatusIcon";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3006";
-const REMOTE_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.hydrosense.awankesehatan.com";
 
 const sensorPanels = {
   panelA: { path: "panelA1", label: "Panel A" },
@@ -133,6 +134,32 @@ const StatusPill = ({ status, label }) => {
       <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
       {label || style.label}
     </span>
+  );
+};
+
+const SensorHealthStrip = () => {
+  const { PANELS, refresh, refreshing } = useSensorHealth();
+
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-sky-100 bg-white px-4 py-3 shadow-sm shadow-sky-100/70">
+      <span className="text-slate-500 text-[11px] font-bold uppercase tracking-wide">Sensor Health</span>
+      <div className="flex items-center gap-3">
+        {PANELS.map((panel) => (
+          <span key={panel} className="flex items-center gap-1 text-xs font-semibold text-slate-600">
+            <SensorStatusIcon panel={panel} />
+            {panel}
+          </span>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={refresh}
+        disabled={refreshing}
+        className="ml-auto rounded-full border border-sky-100 bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-700 disabled:opacity-50"
+      >
+        {refreshing ? "Refreshing..." : "Refresh"}
+      </button>
+    </div>
   );
 };
 
@@ -482,78 +509,28 @@ const Statistics = () => {
   });
   
   useEffect(() => {
-    const toastTimers = {}; // untuk menyimpan timer per panel
+    const fetchLatestPanelData = async (path) => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/data/${path}/latest`, { cache: "no-store" });
+        if (!response.ok) return null;
 
-    const checkAndToast = async () => {
+        const data = await response.json().catch(() => null);
+        return data && typeof data === "object" ? data : null;
+      } catch {
+        return null;
+      }
+    };
+
+    const fetchAllPanels = async () => {
       try {
         let hasAnyData = false;
 
-        const fetchLatestPanelData = async (path) => {
-          const endpoints = Array.from(new Set([
-            `${API_BASE_URL}/data/${path}/latest`,
-            `${REMOTE_API_BASE_URL}/data/${path}/latest`,
-          ]));
-
-          for (const endpoint of endpoints) {
-            try {
-              const response = await fetch(endpoint, { cache: "no-store" });
-              if (!response.ok) continue;
-
-              const data = await response.json().catch(() => null);
-              if (data && typeof data === "object") return data;
-            } catch {
-              // Fetch failure is handled by the sensor toast below.
-            }
-          }
-
-          return null;
-        };
-
-        const showSensorToast = (key, label, createdAt) => {
-          const toastId = `${key}-dead`;
-          const lastSent = createdAt
-            ? `Terakhir mengirim pada: ${moment(createdAt).format("DD MMM YYYY, HH:mm")}`
-            : "Data terakhir belum tersedia.";
-
-          if (!toast.isActive(toastId)) {
-            toast.error(`Sensor ${label} tidak mengirim data hari ini. ${lastSent}`, {
-              autoClose: false,
-              closeOnClick: true,
-              toastId,
-              onClose: () => {
-                if (toastTimers[toastId]) clearTimeout(toastTimers[toastId]);
-                toastTimers[toastId] = setTimeout(() => {
-                  checkAndToast();
-                }, 300000);
-              },
-            });
-          }
-        };
-
         for (const [key, panel] of Object.entries(sensorPanels)) {
           const data = await fetchLatestPanelData(panel.path);
-
-          const isToday = (dateString) => moment(dateString).isSame(moment(), 'day');
-
-          if (!data) {
-            showSensorToast(key, panel.label);
-            continue;
-          }
+          if (!data) continue;
 
           hasAnyData = true;
 
-          if (!data.createdAt || !isToday(data.createdAt)) {
-            showSensorToast(key, panel.label, data.createdAt);
-          } else if (data.createdAt) {
-            // Kalau data sudah valid hari ini, hapus toast dan timer
-            toast.dismiss(`${key}-dead`);
-            if (toastTimers[`${key}-dead`]) {
-              clearTimeout(toastTimers[`${key}-dead`]);
-              delete toastTimers[`${key}-dead`];
-            }
-          }
-
-          // --- Atur state di sini kalau perlu (flow, tds, dsb) ---
           if (key === 'panelA') {
             if (data.flow1 !== undefined) setFlow1(data.flow1);
             if (data.turbidity !== undefined) setTurbidity1(data.turbidity);
@@ -588,10 +565,10 @@ const Statistics = () => {
       }
     };
 
-    checkAndToast();
+    fetchAllPanels();
 
-    // Optional: refresh data every 10 minutes (prevent stale data)
-    const interval = setInterval(checkAndToast, 600000);
+    // Refresh raw panel readings every 10 minutes (liveness itself is now handled by SensorHealthProvider).
+    const interval = setInterval(fetchAllPanels, 600000);
     return () => clearInterval(interval);
   }, []);
 
@@ -794,6 +771,8 @@ const Statistics = () => {
             <StatusPill status={systemStatus} label={systemStatus === "normal" ? "Sistem stabil" : statusStyles[systemStatus].label} />
           </div>
         </header>
+
+        <SensorHealthStrip />
 
         <section className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-4">
           {summaryCards.map((card) => (
