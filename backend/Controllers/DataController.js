@@ -12,6 +12,7 @@ const {
 const { Op } = require('sequelize');
 const moment = require('moment');
 const { Parser } = require('json2csv');
+const { getWeeklyLeakageStats } = require('../helper/leakageStats');
 
 class DataController {
   static async getPanelData(req, res, panelModel) {
@@ -708,6 +709,19 @@ class DataController {
 
   static async getLatestPanelE(req, res) {
     return DataController.getLatestPanelData(req, res, PanelE);
+  }
+
+  // Real, time-integrated leakage stats over the last N days (default 7) -
+  // see helper/leakageStats.js for how the totals are computed from actual
+  // historical rows rather than a single instantaneous reading.
+  static async getWeeklyLeakage(req, res) {
+    try {
+      const days = Number(req.query.days) > 0 ? Number(req.query.days) : 7;
+      const stats = await getWeeklyLeakageStats(days);
+      return res.status(200).json(stats);
+    } catch (err) {
+      return res.status(500).json({ error: "Gagal mengambil statistik kebocoran mingguan." });
+    }
   }
 }
 

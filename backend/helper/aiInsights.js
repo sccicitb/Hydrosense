@@ -8,49 +8,12 @@
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
-const { PanelA, PanelB, PanelE } = require("../models");
+const { getWeeklyLeakageStats } = require("./leakageStats");
 
 const LLM_BASE_URL = process.env.LLM_BASE_URL || "https://llama.sccic.org";
 const LLM_MODEL = process.env.LLM_MODEL || "unsloth/Qwen3.8-27B-GGUF:UD-Q4_K_XL";
 const INSIGHTS_FILE = path.join(__dirname, "..", "data", "ai-insights.json");
 const TIKTOK_FILE = path.join(__dirname, "..", "data", "tiktok-posts.json");
-const WATER_TARIFF_PER_LITER = 6; // Rp, rough estimate - see reports page for sourcing notes.
-const MINUTES_PER_DAY = 24 * 60;
-
-function toNumber(value) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : 0;
-}
-
-function computeSegment(label, upstreamFlow, downstreamFlow) {
-  const upstream = toNumber(upstreamFlow);
-  const downstream = toNumber(downstreamFlow);
-  const lossRate = Math.max(0, upstream - downstream);
-  const lossPercent = upstream > 0 ? (lossRate / upstream) * 100 : 0;
-  const estimatedDailyLiters = lossRate * MINUTES_PER_DAY;
-  const estimatedDailyCost = estimatedDailyLiters * WATER_TARIFF_PER_LITER;
-
-  return { label, upstream, downstream, lossRate, lossPercent, estimatedDailyLiters, estimatedDailyCost };
-}
-
-async function getLatestLeakageSegments() {
-  const [latestA, latestB, latestE] = await Promise.all([
-    PanelA.findOne({ order: [["createdAt", "DESC"]] }),
-    PanelB.findOne({ order: [["createdAt", "DESC"]] }),
-    PanelE.findOne({ order: [["createdAt", "DESC"]] }),
-  ]);
-
-  const flowA1 = latestA ? latestA.flow1 : null;
-  const flowB1 = latestB ? latestB.flow1 : null;
-  const flowB2 = latestB ? latestB.flow2 : null;
-  const flowE1 = latestE ? latestE.flow1 : null;
-
-  return [
-    computeSegment("WTP Intake -> Pump House (masuk)", flowA1, flowB1),
-    computeSegment("Pump House (masuk -> keluar)", flowB1, flowB2),
-    computeSegment("Pump House (keluar) -> Dormitory", flowB2, flowE1),
-  ];
-}
 
 function loadTikTokPosts() {
   try {
@@ -89,29 +52,38 @@ async function callLlm(systemPrompt, userPrompt) {
 }
 
 async function generateLeakageInsight() {
-  const segments = await getLatestLeakageSegments();
-  const totalDailyLiters = segments.reduce((sum, s) => sum + s.estimatedDailyLiters, 0);
-  const totalDailyCost = segments.reduce((sum, s) => sum + s.estimatedDailyCost, 0);
+  // Weekly, time-integrated totals - not a single instantaneous reading -
+  // so the narrative reflects what actually happened over the past week
+  // even when the sensors happen to read zero right now (e.g. pumps idle
+  // at the moment this runs). See helper/leakageStats.js for the math.
+  const weekly = await getWeeklyLeakageStats(7);
+  const { segments, totalLossLiters, totalCost } = weekly;
 
   const systemPrompt =
     "Anda adalah analis operasional untuk sistem monitoring air kampus di Jatinangor. " +
-    "Jawab singkat, dalam Bahasa Indonesia, dengan struktur: ringkasan kondisi, lalu rekomendasi tindakan (poin-poin). " +
-    "Jangan mengulang angka mentah secara berlebihan, fokus pada interpretasi dan tindakan nyata.";
+    "Anda akan diberikan rekap MINGGUAN (7 hari terakhir), bukan pembacaan sesaat. " +
+    "Jawab singkat, dalam Bahasa Indonesia, dengan struktur: ringkasan kondisi selama seminggu terakhir, " +
+    "lalu rekomendasi tindakan (poin-poin). Jangan mengulang angka mentah secara berlebihan, fokus pada " +
+    "interpretasi dan tindakan nyata. Jika data tidak cukup (misal sensor sempat mati), katakan itu secara jujur. " +
+    "Jika ada baris berlabel [CATATAN KUALITAS DATA: ...], JANGAN simpulkan itu sebagai kebocoran nyata - " +
+    "jelaskan sebagai kemungkinan celah data/sensor, bukan kebocoran fisik.";
 
   const userPrompt = [
-    "Data segmen kebocoran air terkini (dihitung dari selisih laju alir sensor, bukan data historis):",
+    `Rekap kebocoran air 7 hari terakhir (dihitung dari total volume riil tiap sensor selama seminggu, ` +
+      `bukan satu titik waktu):`,
     ...segments.map(
       (s) =>
-        `- ${s.label}: masuk ${s.upstream.toFixed(2)} L/m, keluar ${s.downstream.toFixed(2)} L/m, ` +
-        `selisih ${s.lossRate.toFixed(2)} L/m (${s.lossPercent.toFixed(1)}% kehilangan), ` +
-        `estimasi kerugian Rp ${Math.round(s.estimatedDailyCost).toLocaleString("id-ID")}/hari`
+        `- ${s.label}: total masuk ${s.upstreamTotalLiters.toFixed(0)} L, total keluar ${s.downstreamTotalLiters.toFixed(0)} L, ` +
+        `selisih ${s.lossLiters.toFixed(0)} L (${s.lossPercent.toFixed(1)}% kehilangan), ` +
+        `estimasi kerugian Rp ${Math.round(s.estimatedCost).toLocaleString("id-ID")} minggu ini` +
+        (s.note ? ` [CATATAN KUALITAS DATA: ${s.note}]` : "")
     ),
-    `Total estimasi kehilangan: ${totalDailyLiters.toFixed(0)} L/hari, Rp ${Math.round(totalDailyCost).toLocaleString("id-ID")}/hari.`,
-    "Berikan analisis kondisi kebocoran dan rekomendasi tindakan yang perlu diambil operator.",
+    `Total estimasi kehilangan minggu ini: ${totalLossLiters.toFixed(0)} L, Rp ${Math.round(totalCost).toLocaleString("id-ID")}.`,
+    "Berikan analisis kondisi kebocoran selama seminggu terakhir dan rekomendasi tindakan yang perlu diambil operator.",
   ].join("\n");
 
   const text = await callLlm(systemPrompt, userPrompt);
-  return { text, segments, generatedAt: new Date().toISOString() };
+  return { text, weekly, generatedAt: new Date().toISOString() };
 }
 
 async function generateTikTokInsight() {

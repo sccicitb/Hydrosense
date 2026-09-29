@@ -16,5 +16,6 @@ router.get('/panelE1/latest', DataController.getLatestPanelE);
 router.get('/news', DataController.getNewsSearch);
 router.get('/tiktok', DataController.getTikTokSearch);
 router.get('/tiktok-points', DataController.getTikTokPoints);
+router.get('/leakage/weekly', DataController.getWeeklyLeakage);
 
 module.exports = router;
