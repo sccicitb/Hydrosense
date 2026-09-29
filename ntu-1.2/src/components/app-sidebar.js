@@ -38,7 +38,7 @@ const items = [
     icon: Map,
   },
   {
-    title: "Titik Maps",
+    title: "People Reports",
     url: "/titik-maps",
     icon: Map,
   },
