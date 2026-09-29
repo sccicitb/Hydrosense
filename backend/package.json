@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon bin/www",
-    "migrate": "NODE_ENV=production sequelize-cli db:migrate"
+    "migrate": "NODE_ENV=production sequelize-cli db:migrate",
+    "scrape:tiktok": "NODE_ENV=production node scripts/scrapeTikTok.js"
   },
   "keywords": [],
   "author": "",
@@ -26,6 +27,9 @@
     "mqtt": "^5.10.3",
     "mysql2": "^3.11.5",
     "pg": "^8.13.1",
+    "puppeteer": "^25.12.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "sequelize": "^6.37.5",
     "sequelize-cli": "^6.6.2",
     "socket.io": "^4.8.1"

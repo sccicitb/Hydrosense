@@ -1,5 +1,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const {
   PanelA,
   PanelB,
@@ -531,177 +533,42 @@ class DataController {
     }
   }
 
-  static normalizeTikTokComments(payload = {}) {
-    const rawComments =
-      payload.comments ||
-      payload.comment_list ||
-      payload.data?.comments ||
-      payload.data?.comment_list ||
-      [];
-
-    return rawComments
-      .filter(Boolean)
-      .map((comment) => ({
-        id: String(comment.cid || comment.id || DataController.createStableId(comment.text || comment.comment_text)),
-        text: comment.text || comment.comment_text || "",
-        author:
-          comment.user?.nickname ||
-          comment.user?.unique_id ||
-          comment.user?.uniqueId ||
-          "Pengguna TikTok",
-        likeCount: Number(comment.digg_count || comment.like_count || 0),
-        createTime: comment.create_time
-          ? new Date(Number(comment.create_time) * 1000).toISOString()
-          : null,
-      }))
-      .filter((comment) => comment.text)
-      .slice(0, 5);
-  }
-
-  static async fetchTikwmComments(videoId, videoUrl = null) {
-    if (!videoId && !videoUrl) {
-      return { comments: [], warning: "Video TikTok kosong." };
-    }
-
-    const sourceVideoUrl =
-      videoUrl || `https://www.tiktok.com/@tiktok/video/${encodeURIComponent(videoId)}`;
-    const url = `https://www.tikwm.com/api/comment/list?url=${encodeURIComponent(
-      sourceVideoUrl
-    )}&count=5&cursor=0`;
-
-    try {
-      const response = await axios.get(url, {
-        timeout: 15000,
-        headers: {
-          Accept: "application/json, text/plain, */*",
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        },
-        validateStatus: (status) => status >= 200 && status < 500,
-      });
-
-      const comments = DataController.normalizeTikTokComments(response.data || {});
-      return {
-        source: url,
-        comments,
-        warning: comments.length
-          ? null
-          : "Komentar TikTok belum tersedia untuk video ini.",
-      };
-    } catch (err) {
-      return {
-        source: url,
-        comments: [],
-        warning: err.message || "Gagal mengambil komentar TikTok via TikWM.",
-      };
-    }
-  }
-
-  static async fetchTikTokComments(videoId, videoUrl = null) {
-    const tikwmComments = await DataController.fetchTikwmComments(videoId, videoUrl);
-    if (tikwmComments.comments.length) return tikwmComments;
-
-    if (!videoId) return { comments: [], warning: "Video ID kosong." };
-
-    const url = `https://www.tiktok.com/api/comment/list/?aweme_id=${encodeURIComponent(
-      videoId
-    )}&count=10&cursor=0&aid=1988&app_name=tiktok_web&device_platform=web_pc&region=ID&tz_name=Asia%2FJakarta`;
-
-    try {
-      const response = await axios.get(url, {
-        timeout: 12000,
-        headers: {
-          ...DataController.getTikTokHeaders(`https://www.tiktok.com/`),
-          Accept: "application/json, text/plain, */*",
-        },
-        validateStatus: (status) => status >= 200 && status < 500,
-      });
-
-      const comments = DataController.normalizeTikTokComments(response.data || {});
-      return {
-        source: url,
-        comments,
-        warning: comments.length
-          ? null
-          : tikwmComments.warning || "Komentar TikTok tidak tersedia atau dibatasi oleh TikTok.",
-      };
-    } catch (err) {
-      return {
-        source: url,
-        comments: [],
-        warning: err.message || "Gagal mengambil komentar TikTok.",
-      };
-    }
-  }
-
   static inferTikTokIssue(text = "") {
     return DataController.inferNewsIssue(text);
   }
 
+  static getTikTokPostsFilePath() {
+    return path.join(__dirname, "..", "data", "tiktok-posts.json");
+  }
+
   static async getTikTokPoints(req, res) {
     const query = String(req.query.q || "jatinangor air kualitas air").trim();
+    const filePath = DataController.getTikTokPostsFilePath();
 
     try {
-      const queryCandidates = Array.from(
-        new Set([query, "jatinangor air", "jatinangor"])
-      );
-      let result = null;
-
-      for (const candidate of queryCandidates) {
-        result = await DataController.fetchTikTokDetailVideosFromQuery(candidate, 8);
-        if (result.videos.length) break;
-      }
-
-      const videosWithComments = await Promise.all(
-        (result?.videos || []).map(async (video) => {
-          const commentResult = await DataController.fetchTikTokComments(
-            video.id,
-            video.tiktokUrl
-          );
-          const issue = DataController.inferTikTokIssue(video.desc);
-
-          return {
-            id: `tiktok-${video.id}`,
-            title: video.desc ? video.desc.slice(0, 88) : `Video TikTok @${video.author}`,
-            description:
-              video.desc ||
-              "Unggahan TikTok terkait isu air, drainase, atau lingkungan di sekitar Jatinangor.",
-            source: `@${video.authorName || video.author}`,
-            sourceUrl: video.tiktokUrl,
-            author: video.author,
-            authorName: video.authorName,
-            cover: video.cover,
-            videoUrl: video.videoUrl,
-            musicUrl: video.musicUrl,
-            stats: video.stats,
-            comments: commentResult.comments,
-            commentWarning: commentResult.warning,
-            detailSource: video.detailSource,
-            scrapeSource: video.scrapeSource,
-            detailWarning: video.detailWarning,
-            publishedAt: video.createTime ? video.createTime.toISOString() : null,
-            ...issue,
-          };
-        })
-      );
-
-      const items = videosWithComments;
+      const raw = fs.readFileSync(filePath, "utf-8");
+      const stored = JSON.parse(raw);
+      const items = Array.isArray(stored.items) ? stored.items : [];
 
       return res.status(200).json({
         query,
-        source: result?.source || null,
-        effectiveQuery: result?.query || query,
+        source: "local-scrape-cache",
+        effectiveQuery: query,
         items,
+        updatedAt: stored.updatedAt || null,
         warning: items.length
-          ? result?.warning || null
-          : "Detail video TikTok belum tersedia. Endpoint tidak menampilkan hasil search sebagai data.",
+          ? null
+          : "Belum ada data TikTok tersimpan. Jalankan scripts/scrapeTikTok.js untuk mengambil data baru.",
       });
     } catch (err) {
       return res.status(200).json({
         query,
-        source: null,
+        source: "local-scrape-cache",
         items: [],
-        warning: err.message || "Gagal mengambil data TikTok.",
+        warning:
+          err.code === "ENOENT"
+            ? "Belum ada data TikTok tersimpan. Jalankan scripts/scrapeTikTok.js untuk mengambil data baru."
+            : err.message || "Gagal membaca data TikTok tersimpan.",
       });
     }
   }
