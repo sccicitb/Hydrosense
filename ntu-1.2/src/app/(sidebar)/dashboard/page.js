@@ -1,9 +1,6 @@
 "use client";
 
-import { ToastContainer, toast } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
-import Image from "next/image";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import moment from "moment";
 import {
   Activity,
@@ -12,12 +9,13 @@ import {
   ClipboardList,
   Droplets,
   Gauge,
+  HelpCircle,
   ShieldCheck,
   Waves,
   Wrench,
+  XCircle,
 } from "lucide-react";
 import { useSensorHealth } from "@/context/SensorHealthContext";
-import { SensorStatusIcon } from "@/components/SensorStatusIcon";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3006";
 
@@ -120,6 +118,11 @@ const getTurbidityStatus = (value) => {
   return "normal";
 };
 
+const buildMetricWarning = (metricLabel, panelLocation, status) => {
+  if (status === "normal") return null;
+  return `Kualitas air sudah melebihi batas aman konsumsi, perlu dilakukan water treatment tambahan pada ${metricLabel} ${panelLocation}!`;
+};
+
 const average = (values) => {
   const validValues = values.map(toNumber).filter((value) => Number.isFinite(value));
   if (validValues.length === 0) return 0;
@@ -137,29 +140,45 @@ const StatusPill = ({ status, label }) => {
   );
 };
 
+const sensorStateStyles = {
+  live: { icon: CheckCircle2, label: "Live", border: "border-sky-200", bg: "bg-sky-50", text: "text-sky-600" },
+  degraded: { icon: AlertTriangle, label: "Degraded", border: "border-amber-200", bg: "bg-amber-50", text: "text-amber-600" },
+  silent: { icon: XCircle, label: "Silent", border: "border-red-200", bg: "bg-red-50", text: "text-red-600" },
+  unknown: { icon: HelpCircle, label: "Unknown", border: "border-slate-200", bg: "bg-slate-50", text: "text-slate-500" },
+};
+
 const SensorHealthStrip = () => {
-  const { PANELS, refresh, refreshing } = useSensorHealth();
+  const { PANELS, refresh, refreshing, getPanelState } = useSensorHealth();
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-sky-100 bg-white px-4 py-3 shadow-sm shadow-sky-100/70">
-      <span className="text-slate-500 text-[11px] font-bold uppercase tracking-wide">Sensor Health</span>
-      <div className="flex items-center gap-3">
-        {PANELS.map((panel) => (
-          <span key={panel} className="flex items-center gap-1 text-xs font-semibold text-slate-600">
-            <SensorStatusIcon panel={panel} />
-            {panel}
-          </span>
-        ))}
+    <section className="rounded-lg border border-sky-100 bg-white p-5 shadow-sm shadow-sky-100/70">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <SectionTitle title="Sensor Health" subtitle="Status koneksi sensor secara real-time" />
+        <button
+          type="button"
+          onClick={refresh}
+          disabled={refreshing}
+          className="rounded-full border border-sky-100 bg-sky-50 px-4 py-2 text-xs font-bold text-sky-700 disabled:opacity-50"
+        >
+          {refreshing ? "Refreshing..." : "Refresh"}
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={refresh}
-        disabled={refreshing}
-        className="ml-auto rounded-full border border-sky-100 bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-700 disabled:opacity-50"
-      >
-        {refreshing ? "Refreshing..." : "Refresh"}
-      </button>
-    </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {PANELS.map((panel) => {
+          const state = getPanelState(panel);
+          const style = sensorStateStyles[state];
+          const Icon = style.icon;
+
+          return (
+            <div key={panel} className={`flex flex-col items-center gap-2 rounded-lg border ${style.border} ${style.bg} px-4 py-4`}>
+              <Icon size={32} className={style.text} />
+              <span className="text-slate-950 text-sm font-black">Panel {panel}</span>
+              <span className={`text-xs font-bold ${style.text}`}>{style.label}</span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 };
 
@@ -245,7 +264,7 @@ const FlowCard = ({ label, value, formatValue }) => {
   );
 };
 
-const MetricReading = ({ label, value, unit, status, formatValue }) => {
+const MetricReading = ({ label, value, unit, status, formatValue, warning }) => {
   const style = statusStyles[status] || statusStyles.normal;
 
   return (
@@ -258,6 +277,12 @@ const MetricReading = ({ label, value, unit, status, formatValue }) => {
         <span className={`text-3xl font-black ${style.text}`}>{formatValue(value)}</span>
         {unit ? <span className="text-slate-500 text-sm font-bold pb-1">{unit}</span> : null}
       </div>
+      {warning ? (
+        <div className="mt-3 flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2">
+          <AlertTriangle size={14} className="text-red-600 shrink-0 mt-0.5" />
+          <p className="text-red-700 text-xs font-semibold leading-snug">{warning}</p>
+        </div>
+      ) : null}
     </div>
   );
 };
@@ -270,14 +295,9 @@ const QualityPanel = ({ panel, formatValue }) => {
 
   return (
     <article className="rounded-lg border border-sky-100 bg-white overflow-hidden shadow-sm shadow-sky-100/70">
-      <div className="p-4 flex items-center justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-slate-950 text-lg font-black">{panel.name}</p>
-          <p className="text-slate-500 text-xs mt-1">{panel.location}</p>
-        </div>
-        <div className="relative h-12 w-36 shrink-0">
-          <Image src={panel.image} alt={panel.name} fill className="object-contain object-right" />
-        </div>
+      <div className="p-4">
+        <p className="text-slate-950 text-lg font-black">{panel.name}</p>
+        <p className="text-slate-500 text-xs mt-1">{panel.location}</p>
       </div>
       <div className="px-4 pb-4">
         <StatusPill status={panelStatus} label={panelStatus === "normal" ? "Stabil" : statusStyles[panelStatus].label} />
@@ -498,16 +518,6 @@ const Statistics = () => {
   const [isLoading, setisLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState("-");
 
-  const FIVE_MINUTES = 5 * 60 * 1000;
-  const lastToastTime = useRef({
-    tds2: 0,
-    ph2: 0,
-    turbidity2: 0,
-    tds3: 0,
-    ph3: 0,
-    turbidity3: 0,
-  });
-  
   useEffect(() => {
     const fetchLatestPanelData = async (path) => {
       try {
@@ -614,7 +624,6 @@ const Statistics = () => {
     {
       name: "Panel A",
       location: "WTP Intake",
-      image: "/PanelA-Off.svg",
       metrics: [
         { label: "Turbidity", value: turbidity1, unit: "NTU", status: getTurbidityStatus(turbidity1) },
         { label: "pH", value: ph1, unit: "", status: getPhStatus(ph1) },
@@ -624,21 +633,19 @@ const Statistics = () => {
     {
       name: "Panel B",
       location: "Pump House",
-      image: "/PanelB-Off.svg",
       metrics: [
-        { label: "Turbidity", value: turbidity2, unit: "NTU", status: getTurbidityStatus(turbidity2) },
-        { label: "pH", value: ph2, unit: "", status: getPhStatus(ph2) },
-        { label: "TDS", value: tds2, unit: "ppm", status: getTdsStatus(tds2) },
+        { label: "Turbidity", value: turbidity2, unit: "NTU", status: getTurbidityStatus(turbidity2), warning: buildMetricWarning("Turbidity", "Pump House", getTurbidityStatus(turbidity2)) },
+        { label: "pH", value: ph2, unit: "", status: getPhStatus(ph2), warning: buildMetricWarning("pH", "Pump House", getPhStatus(ph2)) },
+        { label: "TDS", value: tds2, unit: "ppm", status: getTdsStatus(tds2), warning: buildMetricWarning("TDS", "Pump House", getTdsStatus(tds2)) },
       ],
     },
     {
-      name: "Panel C",
+      name: "Panel E",
       location: "Dormitory",
-      image: "/PanelC-Off.svg",
       metrics: [
-        { label: "Turbidity", value: turbidity3, unit: "NTU", status: getTurbidityStatus(turbidity3) },
-        { label: "pH", value: ph3, unit: "", status: getPhStatus(ph3) },
-        { label: "TDS", value: tds3, unit: "ppm", status: getTdsStatus(tds3) },
+        { label: "Turbidity", value: turbidity3, unit: "NTU", status: getTurbidityStatus(turbidity3), warning: buildMetricWarning("Turbidity", "Asrama", getTurbidityStatus(turbidity3)) },
+        { label: "pH", value: ph3, unit: "", status: getPhStatus(ph3), warning: buildMetricWarning("pH", "Asrama", getPhStatus(ph3)) },
+        { label: "TDS", value: tds3, unit: "ppm", status: getTdsStatus(tds3), warning: buildMetricWarning("TDS", "Asrama", getTdsStatus(tds3)) },
       ],
     },
   ];
@@ -681,74 +688,8 @@ const Statistics = () => {
     },
   ];
 
-  useEffect(() => {
-    const now = Date.now();
-
-    // TDS Panel Pump House (Panel 2)
-    if (tds2 >= 500 && now - lastToastTime.current.tds2 > FIVE_MINUTES) {
-      toast.warn("Kualitas Air sudah melebihi batas aman konsumsi, perlu dilakukan water treatment tambahan pada TDS Pump House!", {
-        autoClose: false,
-        closeOnClick: true,
-        toastId: "tds2-warning"
-      });
-      lastToastTime.current.tds2 = now;
-    }
-
-    // PH Panel Pump House (Panel 2)
-    if ((ph2 <= 6.5 || ph2 >= 8.0) && now - lastToastTime.current.ph2 > FIVE_MINUTES) {
-      toast.warn("Kualitas Air sudah melebihi batas aman konsumsi, perlu dilakukan water treatment tambahan pada pH Pump House!", {
-        autoClose: false,
-        closeOnClick: true,
-        toastId: "ph2-warning"
-      });
-      lastToastTime.current.ph2 = now;
-    }
-
-    // Turbidity Panel Pump House (Panel 2)
-    if (turbidity2 >= 5 && now - lastToastTime.current.turbidity2 > FIVE_MINUTES) {
-      toast.warn("Kualitas Air sudah melebihi batas aman konsumsi, perlu dilakukan water treatment tambahan pada Turbidity Pump House!", {
-        autoClose: false,
-        closeOnClick: true,
-        toastId: "turbidity2-warning"
-      });
-      lastToastTime.current.turbidity2 = now;
-    }
-
-    // TDS Panel Asrama (Panel 3)
-    if (tds3 >= 500 && now - lastToastTime.current.tds3 > FIVE_MINUTES) {
-      toast.warn("Kualitas Air sudah melebihi batas aman konsumsi, perlu dilakukan water treatment tambahan pada TDS Asrama!", {
-        autoClose: false,
-        closeOnClick: true,
-        toastId: "tds3-warning"
-      });
-      lastToastTime.current.tds3 = now;
-    }
-
-    // PH Panel Asrama (Panel 3)
-    if ((ph3 <= 6.5 || ph3 >= 8.0) && now - lastToastTime.current.ph3 > FIVE_MINUTES) {
-      toast.warn("Kualitas Air sudah melebihi batas aman konsumsi, perlu dilakukan water treatment tambahan pada pH Asrama!", {
-        autoClose: false,
-        closeOnClick: true,
-        toastId: "ph3-warning"
-      });
-      lastToastTime.current.ph3 = now;
-    }
-
-    // Turbidity Panel Asrama (Panel 3)
-    if (turbidity3 >= 5 && now - lastToastTime.current.turbidity3 > FIVE_MINUTES) {
-      toast.warn("Kualitas Air sudah melebihi batas aman konsumsi, perlu dilakukan water treatment tambahan pada Turbidity Asrama!", {
-        autoClose: false,
-        closeOnClick: true,
-        toastId: "turbidity3-warning"
-      });
-      lastToastTime.current.turbidity3 = now;
-    }
-  }, [tds2, ph2, turbidity2, tds3, ph3, turbidity3]);
-
   return (
     <div className="min-h-full w-full max-w-full min-w-0 overflow-x-hidden bg-[#F3FAFF] p-5 sm:p-6 lg:p-8">
-      <ToastContainer />
-
       <div className="space-y-6 pb-8">
         <header className="flex min-w-0 flex-col gap-4 2xl:flex-row 2xl:items-end 2xl:justify-between">
           <div className="min-w-0">
