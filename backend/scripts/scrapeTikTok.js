@@ -76,7 +76,14 @@ function mergePosts(existing, incoming) {
 }
 
 async function scrapeQuery(query) {
-  const browser = await puppeteer.launch({ headless: "new" });
+  // --no-sandbox is required on most Linux servers/containers: Chromium's
+  // sandbox needs user-namespace features that typically aren't enabled
+  // there. Safe in this context since the browser only ever navigates to
+  // TikTok's own pages under this fixed script, not arbitrary content.
+  const browser = await puppeteer.launch({
+    headless: "new",
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
   const capturedResponses = [];
 
   try {
