@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       timestamp: DataTypes.DATE,
       flow1: DataTypes.FLOAT,
+      flow2: DataTypes.FLOAT,
       turbidity: DataTypes.FLOAT,
       ph: DataTypes.FLOAT,
       tds: DataTypes.FLOAT,
