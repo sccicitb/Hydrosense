@@ -99,15 +99,20 @@ async function generateTikTokInsight() {
 
   const systemPrompt =
     "Anda adalah analis isu lingkungan dan air bersih untuk kawasan Jatinangor. " +
-    "Anda akan diberikan judul/deskripsi video TikTok publik yang mungkin relevan. " +
-    "Jawab singkat, dalam Bahasa Indonesia: ringkasan tema/isu yang muncul, lalu apakah ada sinyal yang perlu " +
-    "ditindaklanjuti oleh pengelola air kampus. Jika kontennya tidak relevan dengan air/lingkungan, katakan itu " +
-    "secara jujur, jangan dipaksakan.";
+    "Anda akan diberikan judul/deskripsi video TikTok publik, sebagian mungkin tidak relevan (konten hiburan, " +
+    "iklan, atau topik lain yang tidak terkait air/lingkungan/Jatinangor). " +
+    "Saring dahulu secara internal: abaikan sepenuhnya postingan yang tidak relevan - JANGAN menyebutkan, " +
+    "meringkas, atau mengomentari isi postingan yang tidak relevan sama sekali, cukup tidak usah dibahas. " +
+    "Jawab singkat, dalam Bahasa Indonesia, HANYA berdasarkan postingan yang benar-benar relevan dengan air/" +
+    "lingkungan/Jatinangor: ringkasan tema/isu yang muncul, lalu apakah ada sinyal yang perlu ditindaklanjuti " +
+    "oleh pengelola air kampus. Jika TIDAK ADA satu pun postingan yang relevan, katakan itu secara jujur dalam " +
+    "satu kalimat singkat dan berhenti di situ - jangan membahas postingan yang tidak relevan sebagai gantinya.";
 
   const userPrompt = [
     "Daftar video TikTok terbaru yang berhasil di-scrape (judul/deskripsi):",
     ...posts.map((post, index) => `${index + 1}. "${post.title || post.description || "(tanpa judul)"}"`),
-    "Analisis tema/isu apa yang muncul dari daftar ini, dan apakah relevan dengan pemantauan air/lingkungan Jatinangor.",
+    "Analisis tema/isu apa yang muncul dari daftar ini, dan apakah relevan dengan pemantauan air/lingkungan Jatinangor. " +
+      "Ingat: hanya bahas postingan yang relevan, abaikan sisanya tanpa menyebutkannya.",
   ].join("\n");
 
   const text = await callLlm(systemPrompt, userPrompt);
