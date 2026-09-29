@@ -557,14 +557,13 @@ const Statistics = () => {
           if (key === 'panelC' && data.level1 !== undefined) setLevel1(data.level1);
           if (key === 'panelD') {
             if (data.level1 !== undefined) setLevel2(data.level1);
-            if (data.level !== undefined || data.level1 !== undefined) setLevel3(data.level ?? data.level1);
+            if (data.level2 !== undefined) setLevel3(data.level2);
           }
           if (key === 'panelE') {
             if (data.flow1 !== undefined) setFlow4(data.flow1);
             if (data.turbidity !== undefined) setTurbidity3(data.turbidity);
             if (data.ph !== undefined) setPh3(data.ph);
             if (data.tds !== undefined) setTds3(data.tds);
-            if (data.level1 !== undefined) setLevel3(data.level1);
           }
         }
         setLastUpdated(hasAnyData ? moment().format("DD MMM YYYY, HH:mm") : "Data sensor belum tersedia");
@@ -676,7 +675,7 @@ const Statistics = () => {
       icon: Gauge,
       label: "Rata-rata TDS",
       value: `${fmt(averageTds)} ppm`,
-      helper: "Panel A, B, dan C",
+      helper: "Panel A, B, dan E",
       status: getTdsStatus(averageTds),
     },
     {

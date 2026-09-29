@@ -10,14 +10,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
 
 const TurbidityChart = ({ width }) => {
   const [data, setData] = useState({
-    labels: [
-      "Situ 1", 
-      "Setelah Unit Pre-treatment", 
-      "Setelah Unit Mikrohidro", 
-      "Setelah Rumah Pompa WTP", 
-      "Setelah GWK Induk", 
-      "Asrama TB4"
-    ],
+    labels: ["WTP Intake", "Pump House", "Dormitory"],
     datasets: [
       {
         data: [],
@@ -55,12 +48,9 @@ const TurbidityChart = ({ width }) => {
             {
               ...prevData.datasets[0],
               data: [
-                formatTurbidity(dataA.tds),    // Situ 1
-                formatTurbidity(dataB.tds),    // Setelah Unit Pre-treatment
-                formatTurbidity(dataB.tds),    // Setelah Unit Mikrohidro (menggunakan data panel B yang sama)
-                formatTurbidity(dataB.tds),    // Setelah Rumah Pompa WTP
-                formatTurbidity(dataE.tds),    // Setelah GWK Induk
-                formatTurbidity(dataE.tds),    // Asrama TB4
+                formatTurbidity(dataA.tds),    // WTP Intake (Panel A)
+                formatTurbidity(dataB.tds),    // Pump House (Panel B)
+                formatTurbidity(dataE.tds),    // Dormitory (Panel E)
               ],
             },
           ],
