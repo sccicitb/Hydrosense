@@ -69,6 +69,41 @@ const fmtLiters = (value) => `${toNumber(value).toLocaleString("id-ID", { maximu
 const fmtRupiah = (value) => `Rp ${Math.round(toNumber(value)).toLocaleString("id-ID")}`;
 const fmtPercent = (value) => `${toNumber(value).toFixed(1)}%`;
 
+// The LLM writes lightweight markdown (**bold** lines, "- " bullets, plain
+// paragraphs). Render it without pulling in a markdown library for this.
+const InsightText = ({ text }) => {
+  if (!text) return <p className="text-slate-400 text-sm">Belum ada analisis.</p>;
+
+  return (
+    <div className="text-sm leading-relaxed">
+      {text.split("\n").map((line, index) => {
+        const trimmed = line.trim();
+        if (!trimmed) return null;
+
+        if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
+          return (
+            <p key={index} className="font-bold text-slate-900 mt-3 mb-1">
+              {trimmed.replace(/\*\*/g, "")}
+            </p>
+          );
+        }
+        if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+          return (
+            <p key={index} className="ml-4 text-slate-600 mb-1">
+              &bull; {trimmed.slice(2).replace(/\*\*/g, "")}
+            </p>
+          );
+        }
+        return (
+          <p key={index} className="text-slate-600 mb-2">
+            {trimmed.replace(/\*\*/g, "")}
+          </p>
+        );
+      })}
+    </div>
+  );
+};
+
 const Report = () => {
   const [flowA1, setFlowA1] = useState(null);
   const [flowB1, setFlowB1] = useState(null);
@@ -76,6 +111,47 @@ const Report = () => {
   const [flowE1, setFlowE1] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState("-");
+
+  const [insights, setInsights] = useState(null);
+  const [insightsGeneratedAt, setInsightsGeneratedAt] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState(null);
+
+  const fetchInsights = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/insights`, { cache: "no-store" });
+      const data = await response.json().catch(() => null);
+      if (data) {
+        setInsights(data);
+        setInsightsGeneratedAt(data.generatedAt);
+      }
+    } catch {
+      // Leave existing insights state; the section shows "belum ada analisis".
+    }
+  };
+
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    setGenerateError(null);
+    try {
+      const response = await fetch(`${API_BASE_URL}/insights/generate`, { method: "POST" });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        setGenerateError(data?.error || "Gagal membuat analisis AI.");
+      } else if (data) {
+        setInsights(data);
+        setInsightsGeneratedAt(data.generatedAt);
+      }
+    } catch (err) {
+      setGenerateError(err?.message || "Gagal membuat analisis AI.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInsights();
+  }, []);
 
   useEffect(() => {
     const fetchLatest = async (path) => {
@@ -200,6 +276,51 @@ const Report = () => {
           Dormitory, Panel A &rarr; Panel B &rarr; Panel E). Tarif air Rp {WATER_TARIFF_PER_M3.toLocaleString("id-ID")}/m&sup3;
           adalah estimasi kasar (kategori sosial/pendidikan PDAM), bukan tarif resmi yang tertagih.
         </p>
+      </div>
+
+      <div className="mb-7 w-full rounded-lg border border-sky-100 bg-white p-5 shadow-sm shadow-sky-100/70">
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-slate-900 text-2xl font-bold">Analisis AI</h2>
+            <p className="text-slate-500 text-sm">
+              Dibuat oleh model AI (llama.cpp, self-hosted) berdasarkan data kebocoran dan laporan TikTok terkini.{" "}
+              {insightsGeneratedAt
+                ? `Terakhir dibuat: ${new Date(insightsGeneratedAt).toLocaleString("id-ID")}.`
+                : "Belum pernah dibuat."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={isGenerating}
+            className="rounded-full border border-sky-100 bg-sky-50 px-4 py-2 text-xs font-bold text-sky-700 disabled:opacity-50 whitespace-nowrap"
+          >
+            {isGenerating ? "Membuat analisis..." : "Generate Analisis"}
+          </button>
+        </div>
+
+        {generateError ? (
+          <p className="text-red-600 text-sm mb-4">{generateError}</p>
+        ) : null}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="rounded-lg border border-sky-100 bg-sky-50/70 p-4">
+            <h3 className="text-slate-900 text-lg font-bold mb-2">Berdasarkan Data Kebocoran</h3>
+            {insights?.leakage?.error ? (
+              <p className="text-red-600 text-sm">{insights.leakage.error}</p>
+            ) : (
+              <InsightText text={insights?.leakage?.text} />
+            )}
+          </div>
+          <div className="rounded-lg border border-sky-100 bg-sky-50/70 p-4">
+            <h3 className="text-slate-900 text-lg font-bold mb-2">Berdasarkan Laporan TikTok</h3>
+            {insights?.tiktok?.error ? (
+              <p className="text-red-600 text-sm">{insights.tiktok.error}</p>
+            ) : (
+              <InsightText text={insights?.tiktok?.text} />
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

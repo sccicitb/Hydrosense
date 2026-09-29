@@ -14,5 +14,6 @@ router.post("/login", UserController.login);
 
 router.use("/data", require("./data"));
 router.use("/health", require("./health"));
+router.use("/insights", require("./insights"));
 
 module.exports = router;

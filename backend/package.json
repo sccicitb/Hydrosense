@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon bin/www",
     "migrate": "NODE_ENV=production sequelize-cli db:migrate",
-    "scrape:tiktok": "NODE_ENV=production node scripts/scrapeTikTok.js"
+    "scrape:tiktok": "NODE_ENV=production node scripts/scrapeTikTok.js",
+    "generate:insights": "NODE_ENV=production node scripts/generateInsights.js"
   },
   "keywords": [],
   "author": "",
